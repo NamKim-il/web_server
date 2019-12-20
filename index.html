@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Todo List</title>
+</head>
+<body>
+<style>
+/* 페이지 레이아웃 */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+h1 {
+  margin: 0 0 0.5em 0;
+  text-align: center;
+}
+h2 {
+  margin: 0.5rem 0;
+  border-bottom: 1.5px solid #000;
+  padding: 0.5rem 0;
+}
+#container {
+  width: 50%;
+  background-color: rgb(250, 250, 250);
+  padding: 1rem;
+  border-radius: 0.2em;
+}
+/* 추가하기 디자인 */
+.container-add {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 80px;
+  flex-direction: row;
+}
+.container-add > input {
+  grid-column: 1 / 2;
+}
+.container-add > button {
+  grid-column: 2 / 3;
+}
+/* 일 목록 디자인 */
+.todo-item {
+  padding: 1em 0.5em;
+  border-radius: 0.4em;
+  font-size: 0.9rem;
+  margin-bottom: 0.2em;
+  border-bottom: 1px solid #ddd;
+}
+.action {
+  color: #333;
+  float: right; 
+  margin: 0 0.2em;
+  user-select: none;
+}
+.action-delete:hover {
+  color: #cc0000;
+}
+.action-done:hover {
+  color: #009900;
+}
+/* 완료한 아이템 */
+.todo-done > span:nth-child(1) {
+  text-decoration: line-through;
+}
+</style>
+<div id="container">
+  <h1>할 일</h1>
+  <h2>추가</h2>
+  <div class="container-add">
+    <input type="text" id="todo-input" placeholder="현대암호학 공부">
+    <button id="button-add">넣을게</button>
+  </div>
+  <h2>할 일</h2>
+  <div class="container-list" id="todo-list">
+    <div class="todo-item">
+      <span>맥북 사러 가로수길 가기</span>
+      <span class="action action-done">완료</span>
+      <span class="action action-delete">삭제</span>
+    </div>
+  </div>
+  <h2>완료</h2>
+  <div class="container-list" id="done-list">
+    <div class="todo-item todo-done">
+      <span>코드 리뷰하기</span>
+      <span class="action action-delete">삭제</span>
+    </div>
+  </div>
+</div>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+<script>
+// 주어진 텍스트가 들어간 할 일 아이템을 만들어 반환한다.
+// 반환된 요소를 리스트에 append하면 된다.
+function createNewTask(text) {
+  // 아이템 틀
+  const listItem = document.createElement('div');
+  listItem.className = 'todo-item';
+  // 할일 텍스트
+  const textItem = document.createElement('span');
+  textItem.innerText = text;
+  listItem.appendChild(textItem);
+  // 완료 버튼
+  const doneButton = document.createElement('span');
+  doneButton.innerText = '완료';
+  doneButton.className = 'action action-done';
+  listItem.appendChild(doneButton);
+  // 삭제 버튼
+  const delButton = document.createElement('span');
+  delButton.innerText = '삭제';
+  delButton.className = 'action action-delete';
+  listItem.appendChild(delButton);
+  return listItem;
+}
+
+// 완료된 상태의 아이템 요소를 만든다.
+// createNewTask과 동일한데 완료 버튼이 없다.
+function createDoneTask(text) {
+  // 아이템 틀
+  const listItem = document.createElement('div');
+  listItem.className = 'todo-item todo-done';
+  // 할일 텍스트
+  const textItem = document.createElement('span');
+  textItem.innerText = text;
+  listItem.appendChild(textItem);
+  // 삭제 버튼
+  const delButton = document.createElement('span');
+  delButton.innerText = '삭제';
+  delButton.className = 'action action-delete';
+  listItem.appendChild(delButton);
+  return listItem;
+}
+
+// 한번 직접 추가해보자.
+// $('#todo-list').append(createNewTask('안녕'));
+
+// 입력 내용으로 추가하는 함수
+function addInput() {
+  const newText = $('#todo-input').val().trim();
+  $('#todo-input').val('');
+  if (newText === '') {
+    return;
+  }
+  $('#todo-list').append(createNewTask(newText));
+  // 목록이 바뀌었으니 다시 이벤트를 연결한다.
+  bindEvents();
+}
+
+// 추가 버튼을 누르면 항목을 추가한다.
+$('#button-add').click(addInput);
+// 엔터 쳤을때도 추가한다.
+$('#todo-input').keypress(function (e) {
+  // 엔터의 키코드가 13
+  if (e.keyCode == 13) {
+    addInput();
+  }
+});
+
+// 삭제를 한다.
+// 매개변수로 삭제 버튼 요소를 입력받는다.
+function deleteTask(btnEl) {
+  const listItem = btnEl.parentNode;
+  listItem.parentNode.removeChild(listItem);
+}
+
+// 할 일 작업을 완료 목록으로 옮긴다.
+// 매개변수로 완료 버튼 요소를 입력받는다.
+function finishTask(btnEl) {
+  const listItem = btnEl.parentNode;
+  const itemText = listItem.children[0].innerText;
+  listItem.parentNode.removeChild(listItem);
+  $('#done-list').append(createDoneTask(itemText));
+  // 목록이 바뀌었으니 다시 이벤트를 연결한다.
+  bindEvents();
+}
+
+
+// 실제로 버튼에 함수를 연결한다.
+function bindEvents() {
+  // 삭제 버튼 연결
+  const delBtns = $('.action-delete');
+  for(let i=0; i<delBtns.length; i++) {
+    delBtns[i].onclick = function () {
+      deleteTask(delBtns[i]);
+    };
+  }
+  // 완료 버튼 연결
+  const doneBtns = $('.action-done');
+  for(let i=0; i<doneBtns.length; i++) {
+    doneBtns[i].onclick = function () {
+      finishTask(doneBtns[i]);
+    };
+  }
+}
+
+// 처음 이벤트 연결
+bindEvents();
+</script>
+</body>
+</html>
